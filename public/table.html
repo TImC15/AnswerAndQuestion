@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вопросы и ответы</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f7fa;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #667eea;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #556cd6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #667eea;
+      color: white;
+    }
+
+    .authors {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Вопросы и ответы</h2>
+
+    <div>
+      <textarea id="questionText" placeholder="Введите ваш вопрос..."></textarea>
+      <button onclick="submitQuestion()">Задать вопрос</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Вопрос</th>
+          <th>Ответ</th>
+        </tr>
+      </thead>
+      <tbody id="questionRows"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    let userRole = null;
+
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    // Получение роли пользователя
+    async function getUserInfo() {
+      const res = await fetch('http://localhost:3001/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      userRole = data.role;
+    }
+
+    async function submitQuestion() {
+      const questionText = document.getElementById('questionText').value.trim();
+      if (!questionText) return;
+
+      const res = await fetch('http://localhost:3001/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ question: questionText })
+      });
+
+      const data = await res.json();
+      if (data.status === 'ok') {
+        document.getElementById('questionText').value = '';
+        loadQuestions();
+      } else {
+        alert(data.error || 'Ошибка при отправке вопроса');
+      }
+    }
+
+    async function loadQuestions() {
+      const res = await fetch('http://localhost:3001/questions');
+      const data = await res.json();
+
+      const tableBody = document.getElementById('questionRows');
+      tableBody.innerHTML = '';
+
+      data.forEach(item => {
+        const row = document.createElement('tr');
+
+        const questionCell = document.createElement('td');
+        questionCell.innerHTML = `<strong>${item.question}</strong><div class="authors">Автор: ${item.question_author || 'Неизвестно'}</div>`;
+        row.appendChild(questionCell);
+
+        const answerCell = document.createElement('td');
+        if (item.answer) {
+          answerCell.innerHTML = `${item.answer}<div class="authors">Ответил: ${item.answer_author || 'Неизвестно'}</div>`;
+        } else {
+          if (userRole === 'admin') {
+            answerCell.innerHTML = `
+              <textarea placeholder="Введите ответ..." data-id="${item.id}"></textarea>
+              <button onclick="submitAnswer(${item.id}, this)">Ответить</button>
+            `;
+          } else {
+            answerCell.innerHTML = `<em>Ожидает ответа администратора</em>`;
+          }
+        }
+        row.appendChild(answerCell);
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function submitAnswer(questionId, btn) {
+      const textarea = btn.previousElementSibling;
+      const answer = textarea.value.trim();
+      if (!answer) return;
+
+      const res = await fetch('http://localhost:3001/answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ questionId, answer })
+      });
+
+      const data = await res.json();
+      if (data.status === 'ok') {
+        loadQuestions();
+      } else {
+        alert(data.error || 'Ошибка при отправке ответа');
+      }
+    }
+
+    // Инициализация
+    (async () => {
+      await getUserInfo();  // Загружаем роль пользователя перед отображением
+      loadQuestions();
+    })();
+    </script>
+</body>
+</html>

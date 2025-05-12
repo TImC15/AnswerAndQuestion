@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход / Регистрация</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input {
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #556cd6;
+    }
+
+    .toggle {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 13px;
+      cursor: pointer;
+      color: #667eea;
+    }
+
+    #result {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">Регистрация</h2>
+
+    <form id="authForm">
+      <input type="text" placeholder="ФИО" id="fullname" required>
+      <input type="email" placeholder="Email" id="email" required>
+      <input type="password" placeholder="Пароль" id="password" required>
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="toggle" onclick="toggleForm()">Уже есть аккаунт? Войти</div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let isLogin = false;
+
+    function toggleForm() {
+      isLogin = !isLogin;
+      document.getElementById('formTitle').innerText = isLogin ? 'Вход' : 'Регистрация';
+      document.querySelector('button').innerText = isLogin ? 'Войти' : 'Зарегистрироваться';
+      document.querySelector('.toggle').innerText = isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
+      document.getElementById('result').innerText = '';
+
+      // Показываем / скрываем поле ФИО
+      const fullnameField = document.getElementById('fullname');
+      if (isLogin) {
+        fullnameField.style.display = 'none';
+      } else {
+        fullnameField.style.display = 'block';
+      }
+    }
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullname = document.getElementById('fullname') ? document.getElementById('fullname').value : '';
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const res = await fetch(`http://localhost:3001/${isLogin ? 'login' : 'register'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullname, email, password })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('fullName', data.fullName);
+        window.location.href = 'table.html';
+      }
+    });
+  </script>
+</body>
+</html>
