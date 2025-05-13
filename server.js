@@ -165,5 +165,15 @@ app.get('/questions', async (req, res) => {
   }
 });
 
+const path = require('path');
+
+// Статика из папки public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Путь по умолчанию — index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 // Запуск
 app.listen(3001, '0.0.0.0', () => console.log('Сервер запущен: http://localhost:3001'));
