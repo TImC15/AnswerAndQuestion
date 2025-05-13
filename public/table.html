@@ -96,7 +96,7 @@
 
     // Получение роли пользователя
     async function getUserInfo() {
-      const res = await fetch('http://localhost:3001/profile', {
+      const res = await fetch('https://answerandquestion.onrender.com/profile', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -109,7 +109,7 @@
       const questionText = document.getElementById('questionText').value.trim();
       if (!questionText) return;
 
-      const res = await fetch('http://localhost:3001/questions', {
+      const res = await fetch('https://answerandquestion.onrender.com/questions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +128,7 @@
     }
 
     async function loadQuestions() {
-      const res = await fetch('http://localhost:3001/questions');
+      const res = await fetch('https://answerandquestion.onrender.com/questions');
       const data = await res.json();
 
       const tableBody = document.getElementById('questionRows');
@@ -164,7 +164,7 @@
       const answer = textarea.value.trim();
       if (!answer) return;
 
-      const res = await fetch('http://localhost:3001/answer', {
+      const res = await fetch('https://answerandquestion.onrender.com/answer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
