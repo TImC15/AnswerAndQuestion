@@ -11,7 +11,12 @@ app.use(express.json());
 app.use(express.static('public'));
 
 const SECRET = process.env.JWT_SECRET;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // Создание таблиц
 (async () => {
